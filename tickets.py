@@ -97,7 +97,13 @@ def main():
     idx_entry.grid(row=0, column=1, sticky="w", **P)
 
     ttk.Label(form, text="Fakultet:").grid(row=0, column=2, sticky="w", **P)
-    fac_box = ttk.Combobox(form, textvariable=fac, values=faculties(con), state="readonly", width=20)
+    def fit_popdown():
+        # native ttk: postoffset widens the dropdown list past the box so long names aren't cut off
+        longest = max((font.nametofont("TkTextFont").measure(f) for f in faculties(con)), default=0)
+        ttk.Style().configure("Fac.TCombobox", postoffset=(0, 0, max(0, longest + 40 - fac_box.winfo_width()), 0))
+
+    fac_box = ttk.Combobox(form, textvariable=fac, values=faculties(con), state="readonly", width=26,
+                           style="Fac.TCombobox", postcommand=fit_popdown)
     fac_box.grid(row=0, column=3, sticky="w", **P)
 
     def new_faculty():
