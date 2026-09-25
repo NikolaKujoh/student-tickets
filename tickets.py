@@ -1,4 +1,3 @@
-import re
 import sqlite3
 import sys
 import tkinter as tk
@@ -8,7 +7,6 @@ from tkinter import font, messagebox, simpledialog, ttk
 # next to the .exe when frozen by PyInstaller (__file__ would be a temp dir that gets wiped)
 DB = Path(sys.executable if getattr(sys, "frozen", False) else __file__).with_name("tickets.db")
 DAYS = ["1. dan", "2. dan", "3. dan", "4. dan"]
-INDEX_RE = re.compile(r"\d{4}/\d{4}")
 
 
 def connect(path=DB):
@@ -31,10 +29,16 @@ def add_faculty(con, name):
         con.execute("INSERT OR IGNORE INTO faculty VALUES (?)", (name.strip(),))
 
 
+def remove_faculty(con, name):
+    # sold tickets keep the faculty name, only the dropdown entry goes away
+    with con:
+        con.execute("DELETE FROM faculty WHERE name = ?", (name,))
+
+
 def sell(con, idx, faculty, day):
     """Returns None on success, error message otherwise."""
-    if not INDEX_RE.fullmatch(idx):
-        return "Indeks mora biti u formatu bbbb/gggg (npr. 0123/2024)."
+    if not idx:
+        return "Unesite indeks."
     if not faculty:
         return "Izaberite fakultet."
     try:
@@ -88,12 +92,12 @@ def main():
     form = ttk.LabelFrame(root, text="Nova karta", padding=10)
     form.pack(fill="x", **P)
 
-    ttk.Label(form, text="Indeks (bbbb/gggg):").grid(row=0, column=0, sticky="w", **P)
+    ttk.Label(form, text="Indeks:").grid(row=0, column=0, sticky="w", **P)
     idx_entry = ttk.Entry(form, textvariable=idx, width=20)
     idx_entry.grid(row=0, column=1, sticky="w", **P)
 
     ttk.Label(form, text="Fakultet:").grid(row=0, column=2, sticky="w", **P)
-    fac_box = ttk.Combobox(form, textvariable=fac, values=faculties(con), state="readonly", width=24)
+    fac_box = ttk.Combobox(form, textvariable=fac, values=faculties(con), state="readonly", width=20)
     fac_box.grid(row=0, column=3, sticky="w", **P)
 
     def new_faculty():
@@ -103,7 +107,20 @@ def main():
             fac_box["values"] = faculties(con)
             fac.set(name.strip())
 
-    ttk.Button(form, text="+ Novi", command=new_faculty).grid(row=0, column=4, sticky="w", **P)
+    def del_faculty():
+        name = fac.get()
+        if not name:
+            messagebox.showinfo("Obriši fakultet", "Prvo izaberite fakultet.")
+            return
+        if messagebox.askyesno("Obriši fakultet", f"Obrisati „{name}” iz liste?\nProdate karte ostaju sačuvane."):
+            remove_faculty(con, name)
+            fac_box["values"] = faculties(con)
+            fac.set("")
+
+    btns = ttk.Frame(form)
+    btns.grid(row=0, column=4, sticky="w", **P)
+    ttk.Button(btns, text="+ Novi", width=7, command=new_faculty).pack(side="left")
+    ttk.Button(btns, text="− Obriši", width=8, command=del_faculty).pack(side="left", padx=(6, 0))
 
     ttk.Label(form, text="Dan:").grid(row=1, column=0, sticky="w", **P)
     ttk.Combobox(form, textvariable=day, values=DAYS, state="readonly", width=17).grid(row=1, column=1, sticky="w", **P)

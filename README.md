@@ -1,12 +1,12 @@
-# Student tickets
+﻿# Student tickets
 
-Small app for selling student tickets: index (`bbbb/gggg`), faculty, day (1–4). One ticket per student per day.
+Small app for selling student tickets: index (any text), faculty (add/remove in the app), day (1â€“4). One ticket per student per day.
 
 ## Run it (Windows, no Python needed)
 
 1. Download `tickets.exe` from the [latest release](https://github.com/NikolaKujoh/student-tickets/releases/latest).
 2. Put it in its own folder (e.g. `Desktop\tickets`).
-3. Double-click it. If Windows shows "Windows protected your PC", click **More info → Run anyway**.
+3. Double-click it. If Windows shows "Windows protected your PC", click **More info â†’ Run anyway**.
 
 All sales are saved in `tickets.db`, created next to `tickets.exe`. Back up that file; delete it to start fresh.
 
